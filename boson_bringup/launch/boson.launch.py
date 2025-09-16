@@ -18,7 +18,9 @@ def generate_launch_description():
         package="boson_ros2",
         executable="boson_node",
         name="boson_node",
-        parameters=[{"raw_video": LaunchConfiguration("raw_video")}],
+        parameters=[{"raw_video": LaunchConfiguration("raw_video")},
+                    {'device_path': '/dev/flir-boson'},
+                    {'video_path': '/dev/flir-boson-video'}],
     )
 
     ld.add_action(boson_node)

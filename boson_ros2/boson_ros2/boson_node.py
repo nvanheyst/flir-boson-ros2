@@ -8,32 +8,40 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
+from image_transport import ImageTransport
 
 
 
 class BosonCameraNode(Node):
     def __init__(self):
         super().__init__('boson_node')
-        
-        self.declare_parameter('raw_video', False)
+        self.device_path = self.declare_parameter('device_path', '/dev/flir-boson').get_parameter_value().string_value
+        self.video_path = self.declare_parameter('video_path', '/dev/flir-boson-video').get_parameter_value().string_value
+        self.raw_video = self.declare_parameter('raw_video', False).get_parameter_value().bool_value
         self.declare_parameter('queue_size', 10)
+        
+        self.it = ImageTransport(self)
+        self.image_pub = self.it.advertise('image_raw', queue_size)
+
+        self.get_logger().info(f"Using device path: {self.device_path}")
+        self.get_logger().info(f"Using video path: {self.video_path}")
+        self.get_logger().info(f"Raw video mode: {self.raw_video}")
 
         rclpy.spin_once(self, timeout_sec=1.0)
 
-        self.capture_raw = self.get_parameter('raw_video').value
         queue_size = self.get_parameter('queue_size').value
         
         self.image_pub = self.create_publisher(Image, 'image_raw', queue_size)
         self.bridge = CvBridge()
-        
-        self.cap = cv2.VideoCapture(0 + cv2.CAP_V4L2)
+
+        self.cap = cv2.VideoCapture(self.video_path + cv2.CAP_V4L2)
 
         if not self.cap.isOpened():
             self.get_logger().error("Failed to open camera")
             rclpy.shutdown()
             return        
 
-        if self.capture_raw:
+        if self.raw_video:
             self.get_logger().info("Raw (Y16) capture enabled.")
             self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*"Y16 "))
             self.cap.set(cv2.CAP_PROP_CONVERT_RGB, 0)
@@ -53,14 +61,14 @@ class BosonCameraNode(Node):
         else:
             self.get_logger().info(f"Using resolution {self.width}x{self.height}")
         
-        self.timer = self.create_timer(0.1, self.capture_frame)
+        self.timer = self.create_timer(1/25, self.capture_frame)
         self.frame_count = 0
         self.prev_capture = time.time()
     
     def capture_frame(self):
         capture_success, image = self.cap.read()
         if capture_success:
-            if self.capture_raw:
+            if self.raw_video:
                 if image.dtype == np.uint16:
                     normalized_frame = cv2.normalize(image, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
                     color_map_frame = cv2.applyColorMap(normalized_frame.astype(np.uint8), cv2.COLORMAP_INFERNO)
