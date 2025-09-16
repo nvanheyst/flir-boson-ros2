@@ -8,7 +8,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
-from image_transport import ImageTransport
+# from image_transport import ImageTransport
 
 
 
@@ -20,8 +20,8 @@ class BosonCameraNode(Node):
         self.raw_video = self.declare_parameter('raw_video', False).get_parameter_value().bool_value
         self.declare_parameter('queue_size', 10)
         
-        self.it = ImageTransport(self)
-        self.image_pub = self.it.advertise('image_raw', queue_size)
+        # self.it = ImageTransport(self)
+        # self.image_pub = self.it.advertise('image_raw', queue_size)
 
         self.get_logger().info(f"Using device path: {self.device_path}")
         self.get_logger().info(f"Using video path: {self.video_path}")
@@ -34,7 +34,7 @@ class BosonCameraNode(Node):
         self.image_pub = self.create_publisher(Image, 'image_raw', queue_size)
         self.bridge = CvBridge()
 
-        self.cap = cv2.VideoCapture(self.video_path + cv2.CAP_V4L2)
+        self.cap = cv2.VideoCapture(self.video_path, cv2.CAP_V4L2)
 
         if not self.cap.isOpened():
             self.get_logger().error("Failed to open camera")

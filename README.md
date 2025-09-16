@@ -24,11 +24,13 @@ cd ..
 colcon build --symlink-install
 ```
 
+```bash
 echo "source ~/boson_ws/install/setup.bash" >> ~/.bashrc
 source ~/.bashrc
+```
 
 ```bash
-cd boson_ws/src/flir-boson-ros2/boson_bringup/config/
+cd src/flir-boson-ros2/boson_bringup/config/
 sudo cp ./99-flir-boson.rules /etc/udev/rules.d/
 sudo udevadm control --reload-rules
 sudo udevadm trigger
