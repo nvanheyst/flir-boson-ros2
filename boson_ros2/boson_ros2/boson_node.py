@@ -8,9 +8,6 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
-# from image_transport import ImageTransport
-
-
 
 class BosonCameraNode(Node):
     def __init__(self):
@@ -19,9 +16,7 @@ class BosonCameraNode(Node):
         self.video_path = self.declare_parameter('video_path', '/dev/flir-boson-video').get_parameter_value().string_value
         self.raw_video = self.declare_parameter('raw_video', False).get_parameter_value().bool_value
         self.declare_parameter('queue_size', 10)
-        
-        # self.it = ImageTransport(self)
-        # self.image_pub = self.it.advertise('image_raw', queue_size)
+        self.declare_parameter('log_level', 'info')
 
         self.get_logger().info(f"Using device path: {self.device_path}")
         self.get_logger().info(f"Using video path: {self.video_path}")
